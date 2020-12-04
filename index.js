@@ -1,33 +1,46 @@
-const express = require('express')
-const app = express()
-const port = 3000
-// bodyParser를 사용하기 위해 추가한다.
-const bodyParser = require('body-parser')
-const { User } = require('./models/User')
+const express = require('express'); // express 모드를 가져온다.
+const app = express(); // express 함수를 실행하여 새로운 express app을 생성
+const port = 5000; // port는 자유
+const bodyParser = require('body-parser');
+const { User } = require('./models/User');
+const mongoose = require('mongoose');
+const config = require('./config/key');
 
-// application/x-www-form-urlenconded 에서 파싱해서 가져올 것
+// application/x-www-form-urlencoded 분석해서 가져옴
 app.use(bodyParser.urlencoded({extended: true}));
-// applicaion/json
-app.use(bodyParser.json());
+// application/json 분석해서 가져옴
+app.use(bodyParser.json())
 
-const mongoose = require('mongoose')
-mongoose.connect('mongodb+srv://hansol:abcd1234@boilerplate.qpwad.mongodb.net/boilerplate?retryWrites=true&w=majority', {
-   useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false
-}).then(() => console.log('MongoDB connected...'))
-.catch(error => console.log(error))
+mongoose.connect(config.mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+  useFindAndModify: true
+}).then(() => {
+  console.log('MongoDB Connected...')
+}).catch(err => console.log(err));
+
+
+app.get('/', (req, res) => { // 루트 디렉토리에 오면은 hello world! 글자를 출력
+  res.send('Hello World! 안녕하세요 반갑습니다.')
+});
 
 app.post('/register', (req, res) => {
-   // 회원 가입시 필요한 정보 client에서 가져와 DB에 넣기
-   // body parser를 이용하여 req로 전송
-   const user = new User(req.body)
+  // 회원가입 할 때 필요한 정보들을 client에서 가져오면
+  // 그것들을 데이터베이스에 넣어준다.
+  const user = new User(req.body);
 
-   user.save((error, userInfo) => {
-      if(error) return res.json({success: false, error})
-      return res.status(200).json({
-          success: true
-      })
+  user.save((err, doc) => {
+    if(err) {
+      return res.json({success: false, err});
+    }
+
+    return res.status(200).json({
+      success: true
+    })
   })
-})
+});
 
-app.get('/', (req, res) => res.send('Develog!'))
-app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+app.listen(port, () => { // 앱이 port 5000번에서 실행한다.
+  console.log(`Example app listening at http://localhost:${port}`)
+});
